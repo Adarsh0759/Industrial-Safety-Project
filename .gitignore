@@ -15,3 +15,7 @@ ENV/
 *.swp
 .DS_Store
 Thumbs.db
+Object Detection/data/
+Object Detection/data2/
+Object Detection/data3/
+Object Detection/data*/
