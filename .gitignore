@@ -1,0 +1,17 @@
+git branch -M main
+git remote add origin https://github.com/Adarsh0759/Industrial-Safety-Project
+git push -u origin main
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+.env
+.venv
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
