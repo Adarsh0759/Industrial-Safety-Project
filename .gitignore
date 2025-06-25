@@ -19,3 +19,6 @@ Object Detection/data/
 Object Detection/data2/
 Object Detection/data3/
 Object Detection/data*/
+Object Detection/runs/
+Object Detection/yolov8n.pt
+Object Detection/runs/**/weights/*.pt

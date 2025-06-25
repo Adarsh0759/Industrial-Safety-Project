@@ -1,12 +1,10 @@
 from ultralytics import YOLO
 
 # Load your trained model
-model = YOLO("runs/detect/train15/weights/best.pt")
+model = YOLO("C:/Users/adars/Downloads/best (2).pt")
 
 # Path to your input video
-video_path = "D:\AI ANALYTICS\Object Detection\test_video.mp4"
-
-# Run inference and track frames
+video_path = "C:/Users/adars/Downloads/2048246-hd_1920_1080_24fps.mp4"
 results = model(video_path, stream=True, save=True)
 
 # Initialize frame counter
