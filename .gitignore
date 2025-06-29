@@ -1,32 +1,27 @@
-# Python virtual environment
-**/venv/
+# Python virtual environments
 Backend/venv/
 
-# Model weights and output files
+# Model weights and exports
+Backend/Models/
 *.pt
-*.weights
-*.h5
-Models/
+*.torchscript
+
+# Data folders
+data/
+data2/
+data3/
+
+# Output and results
 runs/
 Results/
 Video Output/
-*data
-*data2
-*data3
 
-# IDE, OS, and temp files
-.idea/
-.vscode/
+# Python cache and IDE files
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
-*.log
-*.bak
-*.tmp
-*.cache
-
-# Node.js dependencies (if any)
-Frontend/static/node_modules/
