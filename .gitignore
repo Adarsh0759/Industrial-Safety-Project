@@ -1,24 +1,32 @@
-git branch -M main
-git remote add origin https://github.com/Adarsh0759/Industrial-Safety-Project
-git push -u origin main
+# Python virtual environment
+**/venv/
+Backend/venv/
+
+# Model weights and output files
+*.pt
+*.weights
+*.h5
+Models/
+runs/
+Results/
+Video Output/
+*data
+*data2
+*data3
+
+# IDE, OS, and temp files
+.idea/
+.vscode/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-.Python
-env/
-venv/
-ENV/
-.env
-.venv
-.idea/
-*.swp
 .DS_Store
 Thumbs.db
-Object Detection/data/
-Object Detection/data2/
-Object Detection/data3/
-Object Detection/data*/
-Object Detection/runs/
-Object Detection/yolov8n.pt
-Object Detection/runs/**/weights/*.pt
+*.log
+*.bak
+*.tmp
+*.cache
+
+# Node.js dependencies (if any)
+Frontend/static/node_modules/
