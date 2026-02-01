@@ -1,0 +1,60 @@
+# Vision System Configuration
+# YAML format - controls all three AI pipelines
+
+# Danger and Safe Zones
+danger_zones:
+  - name: "High-Power Tool Zone"
+    region: [0.0, 0.6, 1.0, 1.0]  # Bottom 40% of frame
+    required_ppe: ['gloves', 'helmet', 'vest']
+    banned_tools: []
+    alert_level: 'critical'
+
+  - name: "Electrical Work Zone"
+    region: [0.0, 0.0, 0.3, 0.4]  # Top-left quadrant
+    required_ppe: ['gloves', 'vest']
+    banned_tools: ['chainsaw']
+    alert_level: 'warning'
+
+  - name: "Height Work Zone"
+    region: [0.7, 0.0, 1.0, 0.3]  # Top-right corner
+    required_ppe: ['helmet', 'harness']
+    alert_level: 'critical'
+
+safe_zones:
+  - name: "Rest Area"
+    region: [0.7, 0.7, 1.0, 1.0]
+  
+  - name: "Equipment Storage"
+    region: [0.0, 0.7, 0.3, 1.0]
+
+# Model paths (relative to Backend directory)
+models:
+  detection: "yolov8m.pt"
+  gesture: "Models/hand.pt"
+  safety: "Models/safety.pt"  # Optional: dedicated safety model
+
+# Inference parameters
+inference:
+  detection_conf_threshold: 0.45
+  gesture_conf_threshold: 0.4
+  safety_conf_threshold: 0.5
+
+# Performance tuning
+performance:
+  # Frame skipping: run model every N frames
+  # 1 = every frame, 2 = every other frame, 3 = every 3rd, etc.
+  detection_frame_skip: 1    # Critical - run every frame
+  gesture_frame_skip: 1      # Can run every frame when ROI available
+  safety_frame_skip: 3       # Less critical - run every 3rd frame
+
+# ROI settings for gesture detection
+gesture_roi:
+  padding: 20                # Add 20px padding to hand bbox
+  min_size: 32              # Minimum 32x32 ROI size to process
+
+# Logging configuration
+logging:
+  level: "INFO"             # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  console_output: true
+  file_output: true
+  log_dir: "logs"

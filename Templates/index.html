@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Intelligence System - Real-Time Detection Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #0a3d62;
+            --primary-dark: #051e3e;
+            --accent-red: #e74c3c;
+            --accent-orange: #f39c12;
+            --accent-green: #27ae60;
+            --accent-cyan: #16a085;
+            --bg-light: #ecf0f1;
+            --text-dark: #2c3e50;
+            --text-light: #95a5a6;
+            --border-color: #bdc3c7;
+            --success: #2ecc71;
+            --warning: #e67e22;
+            --danger: #c0392b;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 8px rgba(0,0,0,0.15);
+            --shadow-lg: 0 8px 16px rgba(0,0,0,0.2);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: 100vh;
+            gap: 0;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .header-icon {
+            font-size: 32px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            background: white;
+            padding: 30px 20px;
+            box-shadow: var(--shadow-md);
+            grid-row: 2 / -1;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 30px;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-light);
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card.hardhats {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-card.people {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-card.vehicles {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .stat-card.backpacks {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .stat-card.gestures {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .stat-card.fps {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-unit {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        .btn-icon::before {
+            margin-right: 6px;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            padding: 30px;
+            grid-row: 2 / -1;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, var(--accent-red) 0%, var(--accent-orange) 100%);
+            border-radius: 2px;
+        }
+
+        /* ===== VIDEO FEED SECTION ===== */
+        .video-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 30px;
+        }
+
+        .video-feed {
+            width: 100%;
+            height: 400px;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .video-feed img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .video-loading {
+            color: #999;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ===== GRID LAYOUT ===== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* ===== DETECTION CARDS ===== */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            border-top: 4px solid var(--border-color);
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+            border-top-color: var(--primary-blue);
+        }
+
+        .card.hardhat-card {
+            border-top-color: #f5576c;
+        }
+
+        .card.vest-card {
+            border-top-color: #00f2fe;
+        }
+
+        .card.gesture-card {
+            border-top-color: #38f9d7;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-badge {
+            background: var(--success);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .card-badge.warning {
+            background: var(--warning);
+        }
+
+        .card-badge.danger {
+            background: var(--danger);
+        }
+
+        .detection-bar {
+            background: linear-gradient(90deg, #ecf0f1 0%, #ecf0f1 100%);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .detection-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green) 0%, var(--accent-cyan) 100%);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-light);
+            border-top: 1px solid #ecf0f1;
+            padding-top: 12px;
+        }
+
+        /* ===== ALERTS ===== */
+        .alerts-container {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .alert {
+            background: #fff3cd;
+            border-left: 4px solid var(--warning);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-size: 13px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .alert-icon {
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+
+        .alert.danger {
+            background: #f8d7da;
+            border-left-color: var(--danger);
+        }
+
+        .alert.success {
+            background: #d4edda;
+            border-left-color: var(--success);
+        }
+
+        /* ===== FOOTER ===== */
+        .system-info {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .system-info {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                grid-row: auto;
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+
+            .main {
+                padding: 20px;
+            }
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .control-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .system-info {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .video-feed {
+                height: 300px;
+            }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        .sidebar::-webkit-scrollbar,
+        .main::-webkit-scrollbar,
+        .alerts-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track,
+        .main::-webkit-scrollbar-track,
+        .alerts-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb,
+        .main::-webkit-scrollbar-thumb,
+        .alerts-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover,
+        .main::-webkit-scrollbar-thumb:hover,
+        .alerts-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <div class="header-title">
+                <span class="header-icon">🛡️</span>
+                <div>
+                    <div>Safety Intelligence System</div>
+                    <div style="font-size: 12px; opacity: 0.8; font-weight: 400;">Real-Time Detection Dashboard</div>
+                </div>
+            </div>
+            <div class="header-status">
+                <span class="status-indicator"></span>
+                <span>System Active</span>
+            </div>
+        </header>
+
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <!-- Key Metrics -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">📊 Detection Metrics</div>
+                
+                <div class="stat-card hardhats">
+                    <div class="stat-label">Hard Hats</div>
+                    <div class="stat-value" id="hardhat-count">0</div>
+                    <div class="stat-unit">detected</div>
+                </div>
+
+                <div class="stat-card people">
+                    <div class="stat-label">People</div>
+                    <div class="stat-value" id="people-count">0</div>
+                    <div class="stat-unit">detected</div>
+                </div>
+
+                <div class="stat-card vehicles">
+                    <div class="stat-label">Vehicles</div>
+                    <div class="stat-value" id="vehicles-count">0</div>
+                    <div class="stat-unit">detected</div>
+                </div>
+
+                <div class="stat-card backpacks">
+                    <div class="stat-label">Backpacks</div>
+                    <div class="stat-value" id="backpacks-count">0</div>
+                    <div class="stat-unit">detected</div>
+                </div>
+
+                <div class="stat-card gestures">
+                    <div class="stat-label">Hand Gestures</div>
+                    <div class="stat-value" id="gesture-count">0</div>
+                    <div class="stat-unit">detected</div>
+                </div>
+
+                <div class="stat-card fps">
+                    <div class="stat-label">Processing Speed</div>
+                    <div class="stat-value" id="fps-count">0</div>
+                    <div class="stat-unit">frames / second</div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">⚙️ Controls</div>
+                <div class="control-buttons">
+                    <button class="btn btn-primary btn-icon" onclick="captureSnapshot()">📷 Snapshot</button>
+                    <button class="btn btn-primary btn-icon" onclick="toggleRecording()">🎥 Record</button>
+                    <button class="btn btn-secondary btn-icon" onclick="clearAlerts()" style="grid-column: 1 / -1;">🗑️ Clear Alerts</button>
+                </div>
+            </div>
+
+            <!-- Active Alerts -->
+            <div class="sidebar-section">
+                <div class="sidebar-title">⚠️ Active Alerts</div>
+                <div class="alerts-container" id="alerts-container">
+                    <p style="color: var(--text-light); font-size: 13px; text-align: center;">No active alerts</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+            <!-- Video Feed -->
+            <div>
+                <h2 class="section-title">Live Video Feed</h2>
+                <div class="video-container">
+                    <div class="video-feed">
+                        <img id="video-stream" src="/video_feed" alt="Live Video Stream" style="display: none;">
+                        <div id="loading-indicator" style="color: #999;">📹 Initializing camera...</div>
+                    </div>
+                    <div class="video-overlay">
+                        <span id="stream-status">🔴 Connecting...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detection Analysis -->
+            <div>
+                <h2 class="section-title">Detection Analysis</h2>
+                <div class="grid-3">
+                    <!-- Hardhat Card -->
+                    <div class="card hardhat-card">
+                        <div class="card-header">
+                            <div class="card-title">👷 Hard Hat Detection</div>
+                            <div class="card-badge" id="hardhat-badge">Active</div>
+                        </div>
+                        <div class="card-value" id="hardhat-detail">0</div>
+                        <div class="detection-bar">
+                            <div class="detection-progress" id="hardhat-progress" style="width: 0%"></div>
+                        </div>
+                        <div class="card-footer">
+                            <span>Compliance Status:</span>
+                            <span id="hardhat-status" style="font-weight: 600; color: var(--accent-green);">✓ Good</span>
+                        </div>
+                    </div>
+
+                    <!-- Vest Card -->
+                    <div class="card vest-card">
+                        <div class="card-header">
+                            <div class="card-title">🦺 Safety Vest Detection</div>
+                            <div class="card-badge" id="vest-badge">Active</div>
+                        </div>
+                        <div class="card-value" id="vest-detail">0</div>
+                        <div class="detection-bar">
+                            <div class="detection-progress" id="vest-progress" style="width: 0%"></div>
+                        </div>
+                        <div class="card-footer">
+                            <span>Compliance Status:</span>
+                            <span id="vest-status" style="font-weight: 600; color: var(--accent-green);">✓ Good</span>
+                        </div>
+                    </div>
+
+                    <!-- Gesture Card -->
+                    <div class="card gesture-card">
+                        <div class="card-header">
+                            <div class="card-title">🖐️ Hand Gesture Recognition</div>
+                            <div class="card-badge" id="gesture-badge">Active</div>
+                        </div>
+                        <div class="card-value" id="gesture-detail">0</div>
+                        <div class="detection-bar">
+                            <div class="detection-progress" id="gesture-progress" style="width: 0%"></div>
+                        </div>
+                        <div class="card-footer">
+                            <span>Detection Status:</span>
+                            <span id="gesture-status" style="font-weight: 600; color: var(--accent-green);">✓ Monitoring</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div>
+                <h2 class="section-title">System Information</h2>
+                <div class="system-info">
+                    <div class="info-item">
+                        <div class="info-label">📊 FPS</div>
+                        <div class="info-value" id="system-fps">0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">⏱️ Uptime</div>
+                        <div class="info-value" id="system-uptime">0s</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">🎬 Frames Processed</div>
+                        <div class="info-value" id="system-frames">0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">🔍 Detection Model</div>
+                        <div class="info-value" style="font-size: 14px;">YOLOv8</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = '/api/stats';
+        let startTime = Date.now();
+        let frameCount = 0;
+        let recordingActive = false;
+
+        // Show video stream
+        window.addEventListener('load', () => {
+            const videoImg = document.getElementById('video-stream');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            
+            videoImg.style.display = 'block';
+            loadingIndicator.style.display = 'none';
+            
+            document.getElementById('stream-status').innerHTML = '🟢 Live';
+            document.getElementById('stream-status').style.color = '#2ecc71';
+        });
+
+        // Update stats from API
+        function updateStats() {
+            fetch(API_URL)
+                .then(response => response.json())
+                .then(data => {
+                    frameCount++;
+                    
+                    // Update detection counts
+                    updateValue('hardhat-count', data.hardhats);
+                    updateValue('people-count', data.people);
+                    updateValue('vehicles-count', data.vehicles);
+                    updateValue('backpacks-count', data.backpacks);
+                    updateValue('gesture-count', data.gestures);
+                    updateValue('fps-count', data.fps || 0);
+
+                    // Update detail cards
+                    updateDetailCard('hardhat', data.hardhats, 10);
+                    updateDetailCard('people', data.people, 20);
+                    updateDetailCard('vehicles', data.vehicles, 10);
+                    updateDetailCard('backpacks', data.backpacks, 10);
+                    updateDetailCard('gesture', data.gestures, 15);
+
+                    // Update system info
+                    updateValue('system-fps', data.fps ? data.fps.toFixed(1) : '0');
+                    updateValue('system-frames', frameCount);
+                    
+                    const uptime = Math.floor((Date.now() - startTime) / 1000);
+                    updateValue('system-uptime', formatUptime(uptime));
+
+                    // Update progress bars
+                    updateProgress('hardhat', data.hardhats, 10);
+                    updateProgress('people', data.people, 20);
+                    updateProgress('vehicles', data.vehicles, 10);
+                    updateProgress('backpacks', data.backpacks, 10);
+                    updateProgress('gesture', data.gestures, 15);
+
+                    // Check for alerts
+                    checkAlerts(data);
+                })
+                .catch(error => {
+                    console.error('Stats fetch error:', error);
+                });
+        }
+
+        function updateValue(id, value) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+            }
+        }
+
+        function updateDetailCard(type, count, maxCount) {
+            const element = document.getElementById(`${type}-detail`);
+            if (element) {
+                element.textContent = count;
+            }
+
+            // Update status badge
+            const badge = document.getElementById(`${type}-badge`);
+            if (badge) {
+                if (count > 0) {
+                    badge.className = 'card-badge';
+                    badge.textContent = '✓ Detected';
+                } else {
+                    badge.className = 'card-badge warning';
+                    badge.textContent = 'Monitoring';
+                }
+            }
+        }
+
+        function updateProgress(type, value, max) {
+            const progress = document.getElementById(`${type}-progress`);
+            if (progress) {
+                const percentage = Math.min((value / max) * 100, 100);
+                progress.style.width = percentage + '%';
+            }
+        }
+
+        function formatUptime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (hours > 0) {
+                return `${hours}h ${minutes}m`;
+            } else if (minutes > 0) {
+                return `${minutes}m ${secs}s`;
+            }
+            return `${secs}s`;
+        }
+
+        function checkAlerts(data) {
+            const container = document.getElementById('alerts-container');
+            
+            if (data.people > 0 && data.hardhats === 0) {
+                if (container.innerHTML.includes('No active alerts')) return;
+                
+                container.innerHTML = `
+                    <div class="alert warning">
+                        <span class="alert-icon">⚠️</span>
+                        <div>
+                            <strong>Safety Alert:</strong> People detected without helmets. Ensure proper PPE compliance.
+                        </div>
+                    </div>
+                `;
+            } else if (data.gestures > 0) {
+                if (container.innerHTML.includes('No active alerts')) return;
+                
+                container.innerHTML = `
+                    <div class="alert warning">
+                        <span class="alert-icon">👋</span>
+                        <div>
+                            <strong>Gesture Detected:</strong> Hand gesture(s) detected in the safety zone.
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <p style="color: var(--text-light); font-size: 13px; text-align: center;">No active alerts</p>
+                `;
+            }
+        }
+
+        function captureSnapshot() {
+            const video = document.getElementById('video-stream');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.naturalWidth;
+            canvas.height = video.naturalHeight;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/jpeg');
+            link.download = `snapshot-${new Date().getTime()}.jpg`;
+            link.click();
+        }
+
+        function toggleRecording() {
+            recordingActive = !recordingActive;
+            const btn = document.querySelector('[onclick="toggleRecording()"]');
+            if (recordingActive) {
+                btn.textContent = '⏹️ Stop Recording';
+                btn.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
+                showToast('Recording started', 'success');
+            } else {
+                btn.textContent = '🎥 Record';
+                btn.style.background = 'linear-gradient(135deg, #0a3d62 0%, #051e3e 100%)';
+                showToast('Recording stopped', 'info');
+            }
+        }
+
+        function clearAlerts() {
+            document.getElementById('alerts-container').innerHTML = '<p style="color: var(--text-light); font-size: 13px; text-align: center;">Alerts cleared</p>';
+        }
+
+        function showToast(message, type = 'info') {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        // Refresh video stream periodically
+        function refreshVideoStream() {
+            const img = document.getElementById('video-stream');
+            if (img && img.style.display !== 'none') {
+                img.src = '/video_feed?' + Date.now();
+            }
+        }
+
+        // Update stats every 1 second
+        setInterval(updateStats, 1000);
+
+        // Refresh video every 2 seconds
+        setInterval(refreshVideoStream, 2000);
+
+        // Initial update
+        updateStats();
+    </script>
+</body>
+</html>
