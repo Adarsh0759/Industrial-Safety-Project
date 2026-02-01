@@ -1,0 +1,27 @@
+# Python virtual environments
+Backend/venv/
+
+# Model weights and exports
+Backend/Models/
+*.pt
+*.torchscript
+
+# Data folders
+data/
+data2/
+data3/
+
+# Output and results
+runs/
+Results/
+Video Output/
+
+# Python cache and IDE files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
