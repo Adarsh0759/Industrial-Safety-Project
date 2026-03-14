@@ -25,6 +25,3 @@ __pycache__/
 .idea/
 .DS_Store
 Thumbs.db
-
-clean_env/
-logs/
