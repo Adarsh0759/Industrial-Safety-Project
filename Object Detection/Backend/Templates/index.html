@@ -3,41 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- Primary Meta -->
     <title>Safety Monitor Pro</title>
-    <meta name="description" content="Real-time AI-powered workplace safety monitoring system for PPE compliance detection."/>
-    <meta name="author" content="Adarsh Anand"/>
-    <meta name="keywords" content="safety monitor, PPE detection, computer vision, YOLOv8, workplace safety"/>
-    <meta name="theme-color" content="#050508"/>
-
-    <!-- Open Graph (for sharing on LinkedIn, WhatsApp etc) -->
-    <meta property="og:title" content="Safety Monitor Pro"/>
-    <meta property="og:description" content="Real-time AI-powered workplace safety monitoring and PPE compliance detection."/>
-    <meta property="og:type" content="website"/>
-
-    <!-- Favicon — replace with your actual icon file -->
-    <link rel="icon" type="image/png" href="/favicon.png"/>
-
-    <!-- Font Awesome for icons -->
+    <meta name="description" content="Real-time workplace safety monitoring with PPE and hand gesture detection.">
+    <meta name="theme-color" content="#101722">
+    <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <!-- Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-
-    <!-- Navbar -->
     <nav class="navbar">
         <div class="navbar-container">
             <div class="navbar-brand">
                 <i class="fas fa-shield-alt"></i>
-                Safety Monitor Pro
+                <div>
+                    <div>Safety Monitor Pro</div>
+                    <small class="navbar-subtitle">Two-model live monitoring</small>
+                </div>
             </div>
             <div class="navbar-status">
                 <div class="status-badge active">
                     <i class="fas fa-circle"></i>
                     System Active
+                </div>
+                <div class="status-badge">
+                    <i class="fas fa-microchip"></i>
+                    Models: <span id="model-status">Loading...</span>
                 </div>
                 <div class="status-badge">
                     <i class="fas fa-video"></i>
@@ -47,545 +37,164 @@
         </div>
     </nav>
 
-    <!-- Main Container -->
-    <div class="main-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <!-- Stats Section -->
-            <div class="sidebar-section">
-                <h3><i class="fas fa-chart-bar"></i> Live Statistics</h3>
-                <div class="stats-card">
-                    <div class="stat-item">
-                        <div class="stat-number" id="hardhat-count">0</div>
-                        <div class="stat-label">Hard Hats</div>
-                    </div>
-                    <i class="fas fa-hard-hat stat-icon"></i>
+    <main class="dashboard-shell">
+        <section class="overview-strip">
+            <article class="overview-card">
+                <div class="overview-copy">
+                    <span class="overview-kicker">PPE</span>
+                    <strong id="hardhat-count">0</strong>
+                    <span>Hard Hats</span>
                 </div>
-                <div class="stats-card">
-                    <div class="stat-item">
-                        <div class="stat-number" id="vest-count">0</div>
-                        <div class="stat-label">Safety Vests</div>
-                    </div>
-                    <i class="fas fa-vest stat-icon"></i>
+                <i class="fas fa-hard-hat"></i>
+            </article>
+            <article class="overview-card">
+                <div class="overview-copy">
+                    <span class="overview-kicker">PPE</span>
+                    <strong id="vest-count">0</strong>
+                    <span>Safety Vests</span>
                 </div>
-                <div class="stats-card">
-                    <div class="stat-item">
-                        <div class="stat-number" id="gesture-count">0</div>
-                        <div class="stat-label">Hand Gestures</div>
-                    </div>
-                    <i class="fas fa-hands stat-icon"></i>
+                <i class="fas fa-vest"></i>
+            </article>
+            <article class="overview-card">
+                <div class="overview-copy">
+                    <span class="overview-kicker">Vision</span>
+                    <strong id="people-count">0</strong>
+                    <span>People</span>
                 </div>
-            </div>
+                <i class="fas fa-user-helmet-safety"></i>
+            </article>
+            <article class="overview-card">
+                <div class="overview-copy">
+                    <span class="overview-kicker">Pipeline</span>
+                    <strong id="models-active">0</strong>
+                    <span>Models Active</span>
+                </div>
+                <i class="fas fa-microchip"></i>
+            </article>
+            <article class="overview-card">
+                <div class="overview-copy">
+                    <span class="overview-kicker">Gesture</span>
+                    <strong id="gesture-count">0</strong>
+                    <span>Hand Gestures</span>
+                </div>
+                <i class="fas fa-hands"></i>
+            </article>
+        </section>
 
-            <!-- Alerts Section -->
-            <div class="sidebar-section">
-                <h3><i class="fas fa-exclamation-triangle"></i> Safety Alerts</h3>
-                <div class="alerts-container" id="alerts-list">
-                    <p class="no-alerts">No alerts</p>
+        <section class="content-grid">
+            <section class="video-panel">
+                <div class="panel-header">
+                    <div>
+                        <h2><i class="fas fa-video"></i> Live Detection Feed</h2>
+                        <p>Focused on `last.pt` PPE detection and `hand.pt` gesture recognition.</p>
+                    </div>
+                    <div class="panel-meta">
+                        <span><i class="fas fa-tachometer-alt"></i> <strong id="fps">0</strong> FPS</span>
+                        <span><i class="fas fa-clock"></i> <strong id="timestamp">--:--:--</strong></span>
+                    </div>
                 </div>
-                <button class="btn btn-secondary" id="clear-alerts">
-                    <i class="fas fa-trash"></i> Clear Alerts
-                </button>
-            </div>
 
-            <!-- Controls Section -->
-            <div class="sidebar-section">
-                <h3><i class="fas fa-cogs"></i> Controls</h3>
-                <button class="btn btn-primary" id="snapshot">
-                    <i class="fas fa-camera"></i> Capture Snapshot
-                </button>
-                <button class="btn btn-danger" id="record">
-                    <i class="fas fa-video"></i> Start Recording
-                </button>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <!-- Video Section -->
-            <section class="video-section">
-                <div class="video-header">
-                    <h2><i class="fas fa-video"></i> Live Safety Feed</h2>
-                    <div class="video-info">
-                        <div class="fps-counter">
-                            <i class="fas fa-tachometer-alt"></i>
-                            <span id="fps">0</span> FPS
-                        </div>
-                        <div class="timestamp">
-                            <i class="fas fa-clock"></i>
-                            <span id="timestamp">--:--:--</span>
+                <div class="video-stage">
+                    <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Live Safety Feed">
+                    <div class="video-overlay">
+                        <div class="detection-info" id="detection-info">
+                            <span>Initializing detection...</span>
                         </div>
                     </div>
                 </div>
-                <div class="video-container">
-                    <div class="video-wrapper">
-                        <img id="video-feed" src="{{ url_for('video_feed') }}" alt="Live Safety Feed">
-                        <div class="video-overlay">
-                            <div class="detection-info" id="detection-info">
-                                <span>Initializing detection...</span>
-                            </div>
-                        </div>
-                    </div>
+
+                <div class="control-row">
+                    <button class="btn btn-primary" id="snapshot">
+                        <i class="fas fa-camera"></i> Capture Snapshot
+                    </button>
+                    <button class="btn btn-danger" id="record">
+                        <i class="fas fa-video"></i> Start Recording
+                    </button>
+                    <button class="btn btn-secondary" id="clear-alerts">
+                        <i class="fas fa-trash"></i> Clear Alerts
+                    </button>
                 </div>
             </section>
 
-            <!-- Details Panel -->
-            <div class="details-panel">
-                <!-- PPE Detection Card -->
-                <div class="detail-card">
-                    <h3><i class="fas fa-hard-hat"></i> PPE Detection</h3>
-                    <div class="detail-content">
-                        <p>
-                            <strong>Hard Hats:</strong>
-                            <span id="ppe-hardhat">Checking...</span>
-                        </p>
-                        <p>
-                            <strong>Safety Vests:</strong>
-                            <span id="ppe-vest">Checking...</span>
-                        </p>
-                        <p>
-                            <strong>Gloves:</strong>
-                            <span>Coming Soon</span>
-                        </p>
-                        <p>
-                            <strong>Boots:</strong>
-                            <span>Coming Soon</span>
-                        </p>
+            <aside class="sidebar">
+                <section class="sidebar-section">
+                    <h3><i class="fas fa-helmet-safety"></i> PPE Status</h3>
+                    <div class="detail-list">
+                        <div class="detail-row">
+                            <span>Hard Hats</span>
+                            <strong id="ppe-hardhat">Checking...</strong>
+                        </div>
+                        <div class="detail-row">
+                            <span>Safety Vests</span>
+                            <strong id="ppe-vest">Checking...</strong>
+                        </div>
+                        <div class="detail-row">
+                            <span>People Detected</span>
+                            <strong id="ppe-people">0</strong>
+                        </div>
+                        <div class="detail-row">
+                            <span>Model</span>
+                            <strong>last.pt + best.pt + best (1).pt</strong>
+                        </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- Gesture Recognition Card -->
-                <div class="detail-card">
-                    <h3><i class="fas fa-hands"></i> Gesture Recognition</h3>
-                    <div class="detail-content">
-                        <p>
-                            <strong>Status:</strong>
-                            <span id="gesture-status" class="status-active">Active</span>
-                        </p>
-                        <p>
-                            <strong>Current Gesture:</strong>
-                            <span id="gesture-type">None</span>
-                        </p>
-                        <p>
-                            <strong>Confidence:</strong>
-                            <span id="gesture-conf">0%</span>
-                        </p>
-                        <p>
-                            <strong>Supported:</strong>
-                            <span>ASL A-Z, 0-9</span>
-                        </p>
+                <section class="sidebar-section">
+                    <h3><i class="fas fa-hand"></i> Gesture Status</h3>
+                    <div class="detail-list">
+                        <div class="detail-row">
+                            <span>Status</span>
+                            <strong id="gesture-status" class="status-active">Active</strong>
+                        </div>
+                        <div class="detail-row">
+                            <span>Current Gesture</span>
+                            <strong id="gesture-type">None</strong>
+                        </div>
+                        <div class="detail-row">
+                            <span>Confidence</span>
+                            <strong id="gesture-conf">0%</strong>
+                        </div>
+                        <div class="detail-row">
+                            <span>Model</span>
+                            <strong>hand.pt</strong>
+                        </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- System Status Card -->
-                <div class="detail-card">
-                    <h3><i class="fas fa-server"></i> System Status</h3>
-                    <div class="detail-content">
-                        <p>
-                            <strong>Uptime:</strong>
-                            <span id="uptime">00:00:00</span>
-                        </p>
-                        <p>
-                            <strong>Models Loaded:</strong>
-                            <span class="status-active">4/4 Active</span>
-                        </p>
-                        <p>
-                            <strong>Processing:</strong>
-                            <span class="status-active">Real-time</span>
-                        </p>
-                        <p>
-                            <strong>Resolution:</strong>
-                            <span>640x480</span>
-                        </p>
+                <section class="sidebar-section">
+                    <h3><i class="fas fa-bell"></i> Safety Alerts</h3>
+                    <div class="alerts-container" id="alerts-list">
+                        <p class="no-alerts">No alerts</p>
                     </div>
-                </div>
-            </div>
-        </main>
-    </div>
+                </section>
 
-    <!-- Toast Notification -->
+                <section class="sidebar-section compact">
+                    <h3><i class="fas fa-server"></i> System</h3>
+                    <div class="detail-list">
+                        <div class="detail-row">
+                            <span>Uptime</span>
+                            <strong id="uptime">00:00:00</strong>
+                        </div>
+                        <div class="detail-row">
+                            <span>Resolution</span>
+                            <strong>640x480</strong>
+                        </div>
+                        <div class="detail-row">
+                            <span>Pipeline</span>
+                            <strong id="pipeline-label">Local multi-model</strong>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </section>
+    </main>
+
     <div class="toast" id="toast">
         <i class="fas fa-check-circle"></i>
         <span id="toast-message">Notification message</span>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-
-</body>
-</html>
-        
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- HEADER -->
-        <header>
-            <div class="header-title">
-                <span class="header-icon">🛡️</span>
-                <div>
-                    <div>Safety Intelligence System</div>
-                    <div style="font-size: 12px; opacity: 0.8; font-weight: 400;">Real-Time Detection Dashboard</div>
-                </div>
-            </div>
-            <div class="header-status">
-                <span class="status-indicator"></span>
-                <span>System Active</span>
-            </div>
-        </header>
-
-        <!-- SIDEBAR -->
-        <div class="sidebar">
-            <!-- Key Metrics -->
-            <div class="sidebar-section">
-                <div class="sidebar-title">📊 Detection Metrics</div>
-                
-                <div class="stat-card hardhats">
-                    <div class="stat-label">Hard Hats</div>
-                    <div class="stat-value" id="hardhat-count">0</div>
-                    <div class="stat-unit">detected</div>
-                </div>
-
-                <div class="stat-card people">
-                    <div class="stat-label">People</div>
-                    <div class="stat-value" id="people-count">0</div>
-                    <div class="stat-unit">detected</div>
-                </div>
-
-                <div class="stat-card vehicles">
-                    <div class="stat-label">Vehicles</div>
-                    <div class="stat-value" id="vehicles-count">0</div>
-                    <div class="stat-unit">detected</div>
-                </div>
-
-                <div class="stat-card backpacks">
-                    <div class="stat-label">Backpacks</div>
-                    <div class="stat-value" id="backpacks-count">0</div>
-                    <div class="stat-unit">detected</div>
-                </div>
-
-                <div class="stat-card gestures">
-                    <div class="stat-label">Hand Gestures</div>
-                    <div class="stat-value" id="gesture-count">0</div>
-                    <div class="stat-unit">detected</div>
-                </div>
-
-                <div class="stat-card fps">
-                    <div class="stat-label">Processing Speed</div>
-                    <div class="stat-value" id="fps-count">0</div>
-                    <div class="stat-unit">frames / second</div>
-                </div>
-            </div>
-
-            <!-- Controls -->
-            <div class="sidebar-section">
-                <div class="sidebar-title">⚙️ Controls</div>
-                <div class="control-buttons">
-                    <button class="btn btn-primary btn-icon" onclick="captureSnapshot()">📷 Snapshot</button>
-                    <button class="btn btn-primary btn-icon" onclick="toggleRecording()">🎥 Record</button>
-                    <button class="btn btn-secondary btn-icon" onclick="clearAlerts()" style="grid-column: 1 / -1;">🗑️ Clear Alerts</button>
-                </div>
-            </div>
-
-            <!-- Active Alerts -->
-            <div class="sidebar-section">
-                <div class="sidebar-title">⚠️ Active Alerts</div>
-                <div class="alerts-container" id="alerts-container">
-                    <p style="color: var(--text-light); font-size: 13px; text-align: center;">No active alerts</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- MAIN CONTENT -->
-        <main class="main">
-            <!-- Video Feed -->
-            <div>
-                <h2 class="section-title">Live Video Feed</h2>
-                <div class="video-container">
-                    <div class="video-feed">
-                        <img id="video-stream" src="/video_feed" alt="Live Video Stream" style="display: none;">
-                        <div id="loading-indicator" style="color: #999;">📹 Initializing camera...</div>
-                    </div>
-                    <div class="video-overlay">
-                        <span id="stream-status">🔴 Connecting...</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Detection Analysis -->
-            <div>
-                <h2 class="section-title">Detection Analysis</h2>
-                <div class="grid-3">
-                    <!-- Hardhat Card -->
-                    <div class="card hardhat-card">
-                        <div class="card-header">
-                            <div class="card-title">👷 Hard Hat Detection</div>
-                            <div class="card-badge" id="hardhat-badge">Active</div>
-                        </div>
-                        <div class="card-value" id="hardhat-detail">0</div>
-                        <div class="detection-bar">
-                            <div class="detection-progress" id="hardhat-progress" style="width: 0%"></div>
-                        </div>
-                        <div class="card-footer">
-                            <span>Compliance Status:</span>
-                            <span id="hardhat-status" style="font-weight: 600; color: var(--accent-green);">✓ Good</span>
-                        </div>
-                    </div>
-
-                    <!-- Vest Card -->
-                    <div class="card vest-card">
-                        <div class="card-header">
-                            <div class="card-title">🦺 Safety Vest Detection</div>
-                            <div class="card-badge" id="vest-badge">Active</div>
-                        </div>
-                        <div class="card-value" id="vest-detail">0</div>
-                        <div class="detection-bar">
-                            <div class="detection-progress" id="vest-progress" style="width: 0%"></div>
-                        </div>
-                        <div class="card-footer">
-                            <span>Compliance Status:</span>
-                            <span id="vest-status" style="font-weight: 600; color: var(--accent-green);">✓ Good</span>
-                        </div>
-                    </div>
-
-                    <!-- Gesture Card -->
-                    <div class="card gesture-card">
-                        <div class="card-header">
-                            <div class="card-title">🖐️ Hand Gesture Recognition</div>
-                            <div class="card-badge" id="gesture-badge">Active</div>
-                        </div>
-                        <div class="card-value" id="gesture-detail">0</div>
-                        <div class="detection-bar">
-                            <div class="detection-progress" id="gesture-progress" style="width: 0%"></div>
-                        </div>
-                        <div class="card-footer">
-                            <span>Detection Status:</span>
-                            <span id="gesture-status" style="font-weight: 600; color: var(--accent-green);">✓ Monitoring</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- System Information -->
-            <div>
-                <h2 class="section-title">System Information</h2>
-                <div class="system-info">
-                    <div class="info-item">
-                        <div class="info-label">📊 FPS</div>
-                        <div class="info-value" id="system-fps">0</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">⏱️ Uptime</div>
-                        <div class="info-value" id="system-uptime">0s</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">🎬 Frames Processed</div>
-                        <div class="info-value" id="system-frames">0</div>
-                    </div>
-                    <div class="info-item">
-                        <div class="info-label">🔍 Detection Model</div>
-                        <div class="info-value" style="font-size: 14px;">YOLOv8</div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <script>
-        const API_URL = '/api/stats';
-        let startTime = Date.now();
-        let frameCount = 0;
-        let recordingActive = false;
-
-        // Show video stream
-        window.addEventListener('load', () => {
-            const videoImg = document.getElementById('video-stream');
-            const loadingIndicator = document.getElementById('loading-indicator');
-            
-            videoImg.style.display = 'block';
-            loadingIndicator.style.display = 'none';
-            
-            document.getElementById('stream-status').innerHTML = '🟢 Live';
-            document.getElementById('stream-status').style.color = '#2ecc71';
-        });
-
-        // Update stats from API
-        function updateStats() {
-            fetch(API_URL)
-                .then(response => response.json())
-                .then(data => {
-                    frameCount++;
-                    
-                    // Update detection counts
-                    updateValue('hardhat-count', data.hardhats);
-                    updateValue('people-count', data.people);
-                    updateValue('vehicles-count', data.vehicles);
-                    updateValue('backpacks-count', data.backpacks);
-                    updateValue('gesture-count', data.gestures);
-                    updateValue('fps-count', data.fps || 0);
-
-                    // Update detail cards
-                    updateDetailCard('hardhat', data.hardhats, 10);
-                    updateDetailCard('people', data.people, 20);
-                    updateDetailCard('vehicles', data.vehicles, 10);
-                    updateDetailCard('backpacks', data.backpacks, 10);
-                    updateDetailCard('gesture', data.gestures, 15);
-
-                    // Update system info
-                    updateValue('system-fps', data.fps ? data.fps.toFixed(1) : '0');
-                    updateValue('system-frames', frameCount);
-                    
-                    const uptime = Math.floor((Date.now() - startTime) / 1000);
-                    updateValue('system-uptime', formatUptime(uptime));
-
-                    // Update progress bars
-                    updateProgress('hardhat', data.hardhats, 10);
-                    updateProgress('people', data.people, 20);
-                    updateProgress('vehicles', data.vehicles, 10);
-                    updateProgress('backpacks', data.backpacks, 10);
-                    updateProgress('gesture', data.gestures, 15);
-
-                    // Check for alerts
-                    checkAlerts(data);
-                })
-                .catch(error => {
-                    console.error('Stats fetch error:', error);
-                });
-        }
-
-        function updateValue(id, value) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.textContent = value;
-            }
-        }
-
-        function updateDetailCard(type, count, maxCount) {
-            const element = document.getElementById(`${type}-detail`);
-            if (element) {
-                element.textContent = count;
-            }
-
-            // Update status badge
-            const badge = document.getElementById(`${type}-badge`);
-            if (badge) {
-                if (count > 0) {
-                    badge.className = 'card-badge';
-                    badge.textContent = '✓ Detected';
-                } else {
-                    badge.className = 'card-badge warning';
-                    badge.textContent = 'Monitoring';
-                }
-            }
-        }
-
-        function updateProgress(type, value, max) {
-            const progress = document.getElementById(`${type}-progress`);
-            if (progress) {
-                const percentage = Math.min((value / max) * 100, 100);
-                progress.style.width = percentage + '%';
-            }
-        }
-
-        function formatUptime(seconds) {
-            const hours = Math.floor(seconds / 3600);
-            const minutes = Math.floor((seconds % 3600) / 60);
-            const secs = seconds % 60;
-            
-            if (hours > 0) {
-                return `${hours}h ${minutes}m`;
-            } else if (minutes > 0) {
-                return `${minutes}m ${secs}s`;
-            }
-            return `${secs}s`;
-        }
-
-        function checkAlerts(data) {
-            const container = document.getElementById('alerts-container');
-            
-            if (data.people > 0 && data.hardhats === 0) {
-                if (container.innerHTML.includes('No active alerts')) return;
-                
-                container.innerHTML = `
-                    <div class="alert warning">
-                        <span class="alert-icon">⚠️</span>
-                        <div>
-                            <strong>Safety Alert:</strong> People detected without helmets. Ensure proper PPE compliance.
-                        </div>
-                    </div>
-                `;
-            } else if (data.gestures > 0) {
-                if (container.innerHTML.includes('No active alerts')) return;
-                
-                container.innerHTML = `
-                    <div class="alert warning">
-                        <span class="alert-icon">👋</span>
-                        <div>
-                            <strong>Gesture Detected:</strong> Hand gesture(s) detected in the safety zone.
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <p style="color: var(--text-light); font-size: 13px; text-align: center;">No active alerts</p>
-                `;
-            }
-        }
-
-        function captureSnapshot() {
-            const video = document.getElementById('video-stream');
-            const canvas = document.createElement('canvas');
-            canvas.width = video.naturalWidth;
-            canvas.height = video.naturalHeight;
-            
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0);
-            
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/jpeg');
-            link.download = `snapshot-${new Date().getTime()}.jpg`;
-            link.click();
-        }
-
-        function toggleRecording() {
-            recordingActive = !recordingActive;
-            const btn = document.querySelector('[onclick="toggleRecording()"]');
-            if (recordingActive) {
-                btn.textContent = '⏹️ Stop Recording';
-                btn.style.background = 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)';
-                showToast('Recording started', 'success');
-            } else {
-                btn.textContent = '🎥 Record';
-                btn.style.background = 'linear-gradient(135deg, #0a3d62 0%, #051e3e 100%)';
-                showToast('Recording stopped', 'info');
-            }
-        }
-
-        function clearAlerts() {
-            document.getElementById('alerts-container').innerHTML = '<p style="color: var(--text-light); font-size: 13px; text-align: center;">Alerts cleared</p>';
-        }
-
-        function showToast(message, type = 'info') {
-            console.log(`[${type.toUpperCase()}] ${message}`);
-        }
-
-        // Refresh video stream periodically
-        function refreshVideoStream() {
-            const img = document.getElementById('video-stream');
-            if (img && img.style.display !== 'none') {
-                img.src = '/video_feed?' + Date.now();
-            }
-        }
-
-        // Update stats every 1 second
-        setInterval(updateStats, 1000);
-
-        // Refresh video every 2 seconds
-        setInterval(refreshVideoStream, 2000);
-
-        // Initial update
-        updateStats();
-    </script>
 </body>
 </html>
