@@ -1,3 +1,4 @@
+from pathlib import Path
 from flask import Flask, Response, render_template, jsonify
 from flask_cors import CORS
 import cv2
@@ -26,13 +27,20 @@ class FPSCounter:
     def get_fps(self):
         return self.fps
 
-app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent
+
+app = Flask(
+    __name__,
+    template_folder=str(BASE_DIR / 'Templates'),
+    static_folder=str(BASE_DIR / 'static')
+)
 CORS(app)
 
 # Global variables
 frame_queue = queue.Queue(maxsize=1)
 detection_data = {
     'hardhats': 0,
+    'vests': 0,
     'people': 0,
     'vehicles': 0,
     'backpacks': 0,
@@ -135,6 +143,7 @@ def generate_frames():
                     
                     with detection_lock:
                         detection_data['hardhats'] = result['hardhats']
+                        detection_data['vests'] = result['vests']
                         detection_data['people'] = result['people']
                         detection_data['vehicles'] = result['vehicles']
                         detection_data['backpacks'] = result['backpacks']
@@ -167,21 +176,6 @@ def generate_frames():
             print(f"Frame error: {e}")
             time.sleep(0.1)
 
-class FPSCounter:
-    def __init__(self, window=30):
-        self.window = window
-        self.timestamps = []
-    
-    def update(self):
-        self.timestamps.append(time.time())
-        if len(self.timestamps) > self.window:
-            self.timestamps.pop(0)
-    
-    def get_fps(self):
-        if len(self.timestamps) < 2:
-            return 0
-        return len(self.timestamps) / (self.timestamps[-1] - self.timestamps[0])
-
 # Start capture thread
 capture_thread = threading.Thread(target=video_capture_thread, daemon=True)
 capture_thread.start()
@@ -197,6 +191,7 @@ def get_stats():
     with detection_lock:
         return jsonify({
             'hardhats': detection_data['hardhats'],
+            'vests': detection_data['vests'],
             'people': detection_data['people'],
             'vehicles': detection_data['vehicles'],
             'backpacks': detection_data['backpacks'],
